@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "today.schumann.monitor",
+  "name": "Schumann Resonance",
+  "version": "1.0.0",
+  "author": "schumann.today",
+  "license": "MIT",
+  "description": "Live Schumann resonance frequencies (F1-F4) from schumann.today in the bar.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Schumann Resonance",
+    "description": "Live F1-F4 frequencies from schumann.today.",
+    "category": "Info",
+    "allowMultiple": false,
+    "defaultSection": "center"
+  }
+}
