@@ -64,7 +64,7 @@ omarchy bar set today.schumann.monitor animate false --json # keep the wave stil
 - `curl`, which Omarchy ships by default, to fetch `https://schumann.today/api/public/snapshot`
 - `xdg-open`, to open the site in your browser
 
-The plugin sends no data anywhere. It only makes a GET request to the endpoint above.
+The plugin sends no data anywhere. It only makes a GET request to the endpoint above, over HTTPS only, and caps the response at 32 KB: `curl` aborts the transfer past that ceiling, and a truncated body is never parsed.
 
 ## License
 

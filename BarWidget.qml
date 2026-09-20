@@ -10,6 +10,10 @@ BarWidget {
 
   readonly property string apiUrl: "https://schumann.today/api/public/snapshot"
   readonly property string siteUrl: "https://schumann.today"
+  // Hard ceiling on the response. curl aborts the transfer once this many
+  // bytes arrive, even when the server sends no Content-Length, so a hostile
+  // or broken endpoint cannot stream unbounded data into this process.
+  readonly property int maxResponseBytes: 32768
 
   // Settings (shell.json bar entry):
   //   "modes": "F1" | "all"   — what the pill shows (default "F1")
@@ -37,8 +41,15 @@ BarWidget {
   }
 
   function update(raw) {
+    var body = String(raw || "")
+    // The snapshot is a few hundred bytes. Anything near the ceiling means the
+    // response was cut short by --max-filesize, so it is never parsed.
+    if (body.length === 0 || body.length >= maxResponseBytes) {
+      failed = true
+      return
+    }
     try {
-      var data = JSON.parse(String(raw || ""))
+      var data = JSON.parse(body)
       freqs = data.frequencies || {}
       timestamp = String(data.timestamp || "")
       failed = false
@@ -141,15 +152,24 @@ BarWidget {
 
   Process {
     id: fetchProc
-    command: ["curl", "-fsS", "--max-time", "10", root.apiUrl]
+    command: [
+      "curl", "-fsS",
+      "--max-time", "10",
+      "--max-filesize", String(root.maxResponseBytes),
+      "--proto", "=https",
+      root.apiUrl
+    ]
 
     stdout: StdioCollector {
+      id: response
       waitForEnd: true
-      onStreamFinished: root.update(text)
     }
 
+    // Parsed only once curl exits cleanly. An overflow aborts the transfer with
+    // exit code 63, so a truncated body never reaches the parser.
     onExited: function(exitCode) {
-      if (exitCode !== 0) root.failed = true
+      if (exitCode === 0) root.update(response.text)
+      else root.failed = true
     }
   }
 
