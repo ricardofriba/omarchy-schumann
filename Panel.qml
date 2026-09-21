@@ -16,6 +16,12 @@ Panel {
   readonly property var freqs: hostWidget ? hostWidget.freqs : ({})
   readonly property string timestamp: hostWidget ? hostWidget.timestamp : ""
   readonly property bool failed: hostWidget ? hostWidget.failed : false
+  readonly property bool hasData: hostWidget ? hostWidget.hasData : false
+  // The timestamp is dropped when it does not match the expected format, so a
+  // reading can be current while its time is unknown.
+  readonly property string stampText: timestamp !== ""
+    ? timestamp + " UTC"
+    : (hasData ? "Time unavailable" : "Waiting for data…")
   readonly property string fontFamily: root.bar ? root.bar.fontFamily : Style.font.family
   readonly property color fg: root.barForeground
   readonly property color dim: Qt.darker(fg, 1.5)
@@ -149,6 +155,7 @@ Panel {
 
               Text {
                 id: bigValue
+                textFormat: Text.PlainText
                 text: root.fmt(root.freqs.F1)
                 color: root.accent
                 font.family: root.fontFamily
@@ -166,6 +173,7 @@ Panel {
             }
 
             Text {
+              textFormat: Text.PlainText
               text: root.delta(root.freqs.F1, 7.83)
               visible: text !== ""
               color: root.dim
@@ -245,6 +253,7 @@ Panel {
 
                 Text {
                   anchors.horizontalCenter: parent.horizontalCenter
+                  textFormat: Text.PlainText
                   text: root.fmt(root.freqs[modelData.key])
                   color: root.fg
                   font.family: root.fontFamily
@@ -277,7 +286,9 @@ Panel {
           Text {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
-            text: (root.timestamp !== "" ? root.timestamp + " UTC" : "Waiting for data…") + "  ·  Tomsk"
+            // API-derived: never interpreted as rich text.
+            textFormat: Text.PlainText
+            text: root.stampText + "  ·  Tomsk"
             color: root.dim
             font.family: root.fontFamily
             font.pixelSize: Style.font.caption

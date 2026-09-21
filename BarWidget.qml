@@ -14,6 +14,10 @@ BarWidget {
   // bytes arrive, even when the server sends no Content-Length, so a hostile
   // or broken endpoint cannot stream unbounded data into this process.
   readonly property int maxResponseBytes: 32768
+  // The endpoint stamps readings as "DD.MM.YYYY HH:MM". Anything else is
+  // dropped rather than shown, so no endpoint-controlled string reaches a
+  // text sink.
+  readonly property var timestampFormat: /^[0-3]\d\.[01]\d\.\d{4} [0-2]\d:[0-5]\d$/
 
   // Settings (shell.json bar entry):
   //   "modes": "F1" | "all"   — what the pill shows (default "F1")
@@ -51,7 +55,8 @@ BarWidget {
     try {
       var data = JSON.parse(body)
       freqs = data.frequencies || {}
-      timestamp = String(data.timestamp || "")
+      var stamp = String(data.timestamp || "")
+      timestamp = timestampFormat.test(stamp) ? stamp : ""
       failed = false
     } catch (error) {
       failed = true
@@ -130,6 +135,7 @@ BarWidget {
         id: valueLabel
         anchors.verticalCenter: parent.verticalCenter
         visible: !root.vertical
+        textFormat: Text.PlainText
         text: root.valueText
         color: button.foreground
         font.family: button.fontFamily
